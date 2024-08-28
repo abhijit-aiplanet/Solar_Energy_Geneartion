@@ -98,6 +98,12 @@ def generate_forecast(df, model_name, models, duration):
 
         predictor = TimeSeriesPredictor(prediction_length=duration).fit(
             train_data, presets="chronos_large",
+            hyperparameters={
+                "Chronos": {
+                    "model_path": "large",
+                    "device": "cpu",
+                }
+            }
             skip_model_selection=True,
             verbosity=0,
         )
