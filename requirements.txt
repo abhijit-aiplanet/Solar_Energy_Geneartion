@@ -5,4 +5,4 @@ lightgbm
 scikit-learn 
 matplotlib 
 prophet 
-autogluon.timeseries
+autogluon
