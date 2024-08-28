@@ -68,7 +68,6 @@ def load_all_models():
 # Function to generate forecasts using the selected model
 def generate_forecast(df, model_name, models, duration):
     if model_name == "ARIMA":
-        # ARIMA Model
         from statsmodels.tsa.arima.model import ARIMA
         df = preprocess_data(df)
         model = ARIMA(df['DAILY_YIELD'], order=(0,1,1), seasonal_order=(1,1,0,48))
@@ -78,11 +77,17 @@ def generate_forecast(df, model_name, models, duration):
         return future_dates, forecast, None, None
 
     elif model_name == "LightGBM":
-        # LightGBM Model
         df = create_features(df)
         df = df.dropna()
         y = df['DAILY_YIELD']
         X = df.drop('DAILY_YIELD', axis=1)
+
+        # Load selected features
+        with open('selected_features.pkl', 'rb') as file:
+            selected_features = pickle.load(file)
+
+        # Use only the selected features
+        X = X[selected_features]
 
         scaler = MinMaxScaler()
         X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
@@ -99,7 +104,6 @@ def generate_forecast(df, model_name, models, duration):
         return future_dates, future_preds, None, None
 
     elif model_name == "Prophet":
-        # Prophet Model
         df = df.reset_index().rename(columns={"DATE_TIME": "ds", "DAILY_YIELD": "y"})
         model = models["Prophet"]
         future = model.make_future_dataframe(periods=duration, freq='D')
@@ -107,7 +111,6 @@ def generate_forecast(df, model_name, models, duration):
         return forecast['ds'].tail(duration), forecast['yhat'].tail(duration), None, None
 
     elif model_name == "AutoGluon":
-        # AutoGluon Model
         data = TimeSeriesDataFrame(df)
         train_data, test_data = data.train_test_split(prediction_length=duration)
 
@@ -118,6 +121,7 @@ def generate_forecast(df, model_name, models, duration):
         )
         predictions = predictor.predict(train_data)
         return predictions.index, predictions.values, None, None
+
 
 # Streamlit app layout
 st.title("Forecasting App")
