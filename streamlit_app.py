@@ -88,6 +88,7 @@ def generate_forecast(df, model_name, models, duration):
         return future_dates, future_preds, None, None
 
     elif model_name == "AutoGluon":
+        df=df.reset_index()
         auto_df["timestamp"]=df["DATE_TIME"].copy()
         auto_df["target"]=df["DAILY_YIELD"].copy()
         auto_df["item_id"]="1"
