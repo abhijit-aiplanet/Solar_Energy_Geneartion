@@ -100,7 +100,7 @@ def generate_forecast(df, model_name, models, duration):
         scaler = MinMaxScaler()
         X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
 
-        model = models["LightGBM"]
+        model = models["LightGBM_1"]
         future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, freq='D')[1:]
         X_future = X_scaled.iloc[-1:].copy()
         future_preds = []
