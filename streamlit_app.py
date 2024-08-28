@@ -58,8 +58,8 @@ def predict(model, X_scaled):
     return model.predict(X_scaled, num_iteration=model.best_iteration)
 
 # Load the model and features
-model_path = 'LightGBM_2.pkl'
-features_path = 'selected_features_2.pkl'
+model_path = 'LightGBM_2 (1).pkl'
+features_path = 'selected_features_2 (1).pkl'
 model, selected_features = load_model_and_features(model_path, features_path)
 
 # Streamlit app
