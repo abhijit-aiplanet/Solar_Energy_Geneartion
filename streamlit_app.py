@@ -37,7 +37,7 @@ def generate_forecast(df, duration):
         train_data, presets="chronos_large",
         hyperparameters={
             "Chronos": {
-                "model_path": "large",
+                "model_path": "tiny",
                 "device": "cpu",
             }
         },
