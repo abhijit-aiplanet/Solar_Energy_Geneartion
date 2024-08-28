@@ -88,8 +88,8 @@ def generate_forecast(df, model_name, models, duration):
         return future_dates, future_preds, None, None
 
     elif model_name == "AutoGluon":
+        df["item_id"]="1"
         data = TimeSeriesDataFrame(df)
-        data["item_id"]="1"
         train_data, test_data = data.train_test_split(prediction_length=duration)
 
         predictor = TimeSeriesPredictor(prediction_length=duration).fit(
