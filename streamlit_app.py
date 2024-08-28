@@ -54,7 +54,7 @@ def load_lightgbm_model():
 def generate_forecast(df, models, duration):
     df = create_features(df)
     df = df.dropna()
-    X = df.drop(columns=['PLANT_ID', 'SOURCE_KEY'])
+    X = df.drop(columns=['PLANT_ID', 'SOURCE_KEY', 'DC_POWER', 'AC_POWER'])
 
     # Load selected features
     with open('selected_features_2.pkl', 'rb') as file:
@@ -67,7 +67,7 @@ def generate_forecast(df, models, duration):
     X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
 
     model = models["LightGBM_1"]
-    future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, freq='D')[1:]
+    future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, freq='15min')[1:]
     X_future = X_scaled.iloc[-1:].copy()
     future_preds = []
     for i in range(duration):
@@ -93,7 +93,7 @@ if uploaded_file is not None:
         st.success("CSV file validated and processed successfully!")
 
         # Duration selection
-        duration = st.slider("Select duration for forecasting (in days)", 1, 365, 30)
+        duration = st.slider("Select duration for forecasting (in days)", 1, 100, 30)
 
         if st.button("Generate Forecast"):
             future_dates, forecast, mae, r2 = generate_forecast(df, models, duration)
