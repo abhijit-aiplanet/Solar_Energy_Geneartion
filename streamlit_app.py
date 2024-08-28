@@ -30,10 +30,10 @@ def generate_forecast(df, duration):
     auto_df["target"] = df["DAILY_YIELD"].copy()
     auto_df["item_id"] = "1"
     
-    data = TimeSeriesDataFrame(auto_df, freq="15min")
+    data = TimeSeriesDataFrame(auto_df)
     train_data, test_data = data.train_test_split(prediction_length=duration)
 
-    predictor = TimeSeriesPredictor(prediction_length=duration).fit(
+    predictor = TimeSeriesPredictor(prediction_length=duration, freq="15min").fit(
         train_data, presets="chronos_large",
         hyperparameters={
             "Chronos": {
