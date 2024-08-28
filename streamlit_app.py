@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
-import pickle
 import numpy as np
+import pickle
 import lightgbm as lgb
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -47,10 +48,18 @@ def create_features(df):
     
     return df
 
-# Load ARIMA, LightGBM, Prophet models (AutoGluon will do zero-shot inference)
+# Train ARIMA model
+def train_arima(df):
+    model = SARIMAX(df['DAILY_YIELD'], 
+                    order=(0, 1, 1), 
+                    seasonal_order=(1, 1, 0, 48))
+    model_fit = model.fit(disp=False)
+    return model_fit
+
+# Load LightGBM, Prophet models (AutoGluon will do zero-shot inference)
 def load_all_models():
     models = {}
-    model_names = ["ARIMA", "LightGBM", "Prophet"]
+    model_names = ["LightGBM", "Prophet"]
     for model_name in model_names:
         with open(f"{model_name}.pkl", "rb") as file:
             models[model_name] = pickle.load(file)
@@ -59,9 +68,9 @@ def load_all_models():
 # Function to generate forecasts using the selected model
 def generate_forecast(df, model_name, models, duration):
     if model_name == "ARIMA":
-        model = models["ARIMA"]
-        forecast = model.forecast(steps=duration)
-        future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, closed='right')
+        model_fit = train_arima(df)
+        forecast = model_fit.get_forecast(steps=duration).predicted_mean
+        future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, closed='right')[1:]
         return future_dates, forecast, None, None
 
     elif model_name == "LightGBM":
@@ -76,11 +85,13 @@ def generate_forecast(df, model_name, models, duration):
         model = models["LightGBM"]
         future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, closed='right')
         X_future = X_scaled.iloc[-1:].copy()
+        future_preds = []
         for i in range(duration):
             future_pred = model.predict(X_future)
+            future_preds.append(future_pred[0])
             X_future = X_scaled.iloc[-1:].shift(-1)
-            X_future.iloc[-1, X.columns.get_loc('yield_lag_1')] = future_pred[-1]
-        return future_dates, future_pred, None, None
+            X_future.iloc[-1, X.columns.get_loc('yield_lag_1')] = future_pred[0]
+        return future_dates, future_preds, None, None
 
     elif model_name == "Prophet":
         df = df.reset_index().rename(columns={"DATE_TIME": "ds", "DAILY_YIELD": "y"})
