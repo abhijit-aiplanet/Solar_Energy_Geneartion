@@ -59,7 +59,7 @@ def train_arima(df):
 # Load LightGBM, Prophet models (AutoGluon will do zero-shot inference)
 def load_all_models():
     models = {}
-    model_names = ["LightGBM", "Prophet"]
+    model_names = ["LightGBM_1", "Prophet"]
     for model_name in model_names:
         with open(f"{model_name}.pkl", "rb") as file:
             models[model_name] = pickle.load(file)
