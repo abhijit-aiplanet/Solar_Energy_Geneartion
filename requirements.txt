@@ -1,0 +1,8 @@
+streamlit
+pandas 
+numpy 
+lightgbm 
+scikit-learn 
+matplotlib 
+prophet 
+autogluon.timeseries
