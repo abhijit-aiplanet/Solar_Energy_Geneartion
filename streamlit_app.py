@@ -20,7 +20,12 @@ def preprocess_data(data):
     # Select only the required columns, reordering them as needed
     df = df[LIGHTGBM_COLUMNS]
 
-    df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'])
+    # Convert DATE_TIME to datetime, with dayfirst=True to handle day-month-year formats
+    df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'], dayfirst=True, errors='coerce')
+
+    # Drop any rows where the datetime conversion failed
+    df = df.dropna(subset=['DATE_TIME'])
+
     df.set_index('DATE_TIME', inplace=True)
 
     return df
@@ -54,7 +59,7 @@ def load_lightgbm_model():
 def generate_forecast(df, models, duration):
     df = create_features(df)
     df = df.dropna()
-    X = df.drop(columns=['PLANT_ID', 'SOURCE_KEY', 'DC_POWER', 'AC_POWER'])
+    X = df.drop(columns=['PLANT_ID', 'SOURCE_KEY'])
 
     # Load selected features
     with open('selected_features_2.pkl', 'rb') as file:
@@ -67,7 +72,7 @@ def generate_forecast(df, models, duration):
     X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
 
     model = models["LightGBM_1"]
-    future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, freq='15min')[1:]
+    future_dates = pd.date_range(start=df.index[-1], periods=duration + 1, freq='D')[1:]
     X_future = X_scaled.iloc[-1:].copy()
     future_preds = []
     for i in range(duration):
@@ -93,7 +98,7 @@ if uploaded_file is not None:
         st.success("CSV file validated and processed successfully!")
 
         # Duration selection
-        duration = st.slider("Select duration for forecasting (in days)", 1, 100, 30)
+        duration = st.slider("Select duration for forecasting (in days)", 1, 365, 30)
 
         if st.button("Generate Forecast"):
             future_dates, forecast, mae, r2 = generate_forecast(df, models, duration)
