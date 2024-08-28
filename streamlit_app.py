@@ -17,6 +17,14 @@ EXPECTED_COLUMNS = ['DATE_TIME', 'PLANT_ID', 'SOURCE_KEY', 'DC_POWER', 'AC_POWER
 # Preprocessing function
 def preprocess_data(data):
     df = data.copy()
+    # Ensure all expected columns are present
+    for col in EXPECTED_COLUMNS:
+        if col not in df.columns:
+            raise ValueError(f"Missing column: {col}")
+    
+    # Select only the required columns, reordering them as needed
+    df = df[EXPECTED_COLUMNS]
+    
     df.drop(['PLANT_ID', 'SOURCE_KEY', 'DC_POWER', 'AC_POWER', 'TOTAL_YIELD'], axis=1, inplace=True)
     df['DATE_TIME'] = pd.to_datetime(df['DATE_TIME'])
     df.set_index('DATE_TIME', inplace=True)
@@ -134,12 +142,10 @@ uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    if list(df.columns) != EXPECTED_COLUMNS:
-        st.error(f"The CSV must contain the following columns: {EXPECTED_COLUMNS}")
-    else:
-        st.success("CSV file validated successfully!")
+    try:
         df = preprocess_data(df)
-
+        st.success("CSV file validated and processed successfully!")
+        
         # Model selection
         model_option = st.selectbox("Select a model", ("ARIMA", "LightGBM", "Prophet", "AutoGluon"))
 
@@ -164,3 +170,7 @@ if uploaded_file is not None:
                 st.subheader("Metrics")
                 st.write(f"MAE: {mae}")
                 st.write(f"R²: {r2}")
+    except ValueError as e:
+        st.error(f"Error processing CSV: {str(e)}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {str(e)}")
